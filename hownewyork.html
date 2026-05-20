@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How New York Are You? — A Diagnostic Test</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,700;0,6..72,800;1,6..72,400;1,6..72,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f5f1e8;
+    --paper-dim: #e9e2d1;
+    --ink: #0f0f0f;
+    --ink-soft: #3a3a3a;
+    --red: #e8201c;
+    --red-deep: #b8140f;
+    --yellow: #ffd400;
+    --line-1: #ee352e;   /* red — 1/2/3 line */
+    --line-n: #fccc0a;   /* yellow — N/Q/R/W */
+    --line-a: #0039a6;   /* blue — A/C/E */
+    --line-g: #6cbe45;   /* green — G */
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    min-height: 100vh;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Newsreader', Georgia, serif;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* newsprint texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.55;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='2' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 0.15 0 0 0 0 0.13 0 0 0 0 0.10 0 0 0 0.18 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    mix-blend-mode: multiply;
+  }
+
+  main {
+    position: relative;
+    z-index: 2;
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 36px 28px 80px;
+  }
+
+  /* === SERVICE ALERT BAR === */
+  .alert-bar {
+    background: var(--yellow);
+    color: var(--ink);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 8px 14px;
+    margin-bottom: 28px;
+    border: 2px solid var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .alert-bar::before {
+    content: '⚠';
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .alert-marquee {
+    display: inline-block;
+    animation: marquee 22s linear infinite;
+    padding-left: 100%;
+  }
+
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-100%); }
+  }
+
+  /* === MASTHEAD === */
+  .masthead {
+    border-top: 8px solid var(--ink);
+    border-bottom: 4px solid var(--ink);
+    padding: 22px 0 26px;
+    margin-bottom: 40px;
+    position: relative;
+  }
+
+  .masthead::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--ink);
+  }
+
+  .kicker {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    color: var(--ink);
+  }
+
+  .kicker .edition {
+    background: var(--red);
+    color: var(--paper);
+    padding: 3px 8px;
+  }
+
+  h1 {
+    font-family: 'Anton', sans-serif;
+    font-weight: 400;
+    font-size: clamp(64px, 14vw, 140px);
+    line-height: 0.82;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+
+  h1 .red-word {
+    color: var(--red);
+    -webkit-text-stroke: 0;
+    display: inline-block;
+    transform: skew(-4deg);
+  }
+
+  .deck {
+    font-family: 'Newsreader', serif;
+    font-style: italic;
+    font-weight: 500;
+    font-size: 18px;
+    line-height: 1.3;
+    color: var(--ink);
+    margin-top: 14px;
+    max-width: 520px;
+  }
+
+  /* === SCREENS === */
+  .screen { display: none; animation: slideIn 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
+  .screen.active { display: block; }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* === INTRO === */
+  .intro-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 28px;
+    align-items: start;
+    margin-bottom: 36px;
+  }
+
+  .intro-num {
+    font-family: 'Anton', sans-serif;
+    font-size: 130px;
+    line-height: 0.85;
+    color: var(--red);
+  }
+
+  .intro-body {
+    font-family: 'Newsreader', serif;
+    font-size: 19px;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+
+  .intro-body p + p { margin-top: 14px; }
+
+  .center-btn { text-align: center; }
+
+  button.primary {
+    background: var(--ink);
+    color: var(--yellow);
+    border: 3px solid var(--ink);
+    font-family: 'Anton', sans-serif;
+    font-size: 22px;
+    letter-spacing: 0.08em;
+    padding: 18px 40px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.15s;
+    box-shadow: 6px 6px 0 var(--red);
+  }
+  button.primary:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 9px 9px 0 var(--red);
+  }
+  button.primary:active {
+    transform: translate(3px, 3px);
+    box-shadow: 3px 3px 0 var(--red);
+  }
+
+  button.ghost {
+    background: var(--paper);
+    color: var(--ink);
+    border: 2px solid var(--ink);
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    padding: 14px 24px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  button.ghost:hover {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  /* === QUESTION === */
+  .progress {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: var(--ink);
+    text-transform: uppercase;
+    padding-bottom: 14px;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .progress-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--paper-dim);
+    margin: 0 16px;
+    border: 1px solid var(--ink);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    position: absolute;
+    inset: 0;
+    background: var(--red);
+    transform-origin: left;
+    transform: scaleX(0);
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .q-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+
+  .q-num-bullet {
+    background: var(--ink);
+    color: var(--yellow);
+    font-family: 'Anton', sans-serif;
+    font-size: 28px;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  .q-num-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: var(--red);
+    text-transform: uppercase;
+  }
+
+  .question-text {
+    font-family: 'Anton', sans-serif;
+    font-size: clamp(30px, 5.5vw, 46px);
+    line-height: 1.0;
+    letter-spacing: -0.005em;
+    margin-bottom: 30px;
+    color: var(--ink);
+    text-transform: uppercase;
+  }
+
+  .options {
+    display: grid;
+    gap: 10px;
+  }
+
+  .option {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 18px;
+    background: var(--paper);
+    border: 2px solid var(--ink);
+    cursor: pointer;
+    text-align: left;
+    font-family: 'Newsreader', serif;
+    font-size: 18px;
+    line-height: 1.35;
+    color: var(--ink);
+    transition: all 0.15s;
+    width: 100%;
+  }
+
+  .option:hover {
+    background: var(--ink);
+    color: var(--paper);
+    transform: translateX(6px);
+    box-shadow: -6px 0 0 var(--red);
+  }
+
+  .line-bullet {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-family: 'Anton', sans-serif;
+    font-size: 20px;
+    color: white;
+    border: 2px solid var(--ink);
+    line-height: 1;
+  }
+
+  .line-1 { background: var(--line-1); }
+  .line-n { background: var(--line-n); color: var(--ink); }
+  .line-a { background: var(--line-a); }
+  .line-g { background: var(--line-g); }
+
+  /* === RESULT === */
+  .certificate {
+    background: var(--paper);
+    border: 4px solid var(--ink);
+    padding: 0;
+    margin-bottom: 28px;
+    position: relative;
+    box-shadow: 10px 10px 0 var(--ink);
+    overflow: hidden;
+  }
+
+  .cert-banner {
+    background: var(--ink);
+    color: var(--yellow);
+    padding: 12px 24px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .cert-body {
+    padding: 36px 32px 42px;
+    text-align: center;
+  }
+
+  .cert-eyebrow {
+    font-family: 'Newsreader', serif;
+    font-style: italic;
+    font-size: 16px;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+
+  .cert-score {
+    font-family: 'Anton', sans-serif;
+    font-size: clamp(110px, 22vw, 200px);
+    line-height: 0.85;
+    letter-spacing: -0.04em;
+    color: var(--red);
+    margin: 8px 0;
+  }
+
+  .cert-pct {
+    font-size: 0.4em;
+    color: var(--ink);
+    margin-left: 4px;
+    vertical-align: super;
+  }
+
+  .cert-diagnosis {
+    font-family: 'Anton', sans-serif;
+    font-size: clamp(36px, 6.5vw, 56px);
+    line-height: 0.95;
+    margin: 4px 0 18px;
+    color: var(--ink);
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+  }
+
+  .cert-tagline {
+    font-family: 'Newsreader', serif;
+    font-style: italic;
+    font-size: 19px;
+    line-height: 1.5;
+    color: var(--ink);
+    max-width: 480px;
+    margin: 0 auto 24px;
+  }
+
+  .cert-stamp {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    border: 2px solid var(--red);
+    color: var(--red);
+    padding: 6px 14px;
+    transform: rotate(-3deg);
+    text-transform: uppercase;
+  }
+
+  .actions-row {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  /* footer */
+  .footer {
+    margin-top: 60px;
+    text-align: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    border-top: 2px solid var(--ink);
+    padding-top: 16px;
+  }
+
+  @media (max-width: 600px) {
+    main { padding: 20px 16px 60px; }
+    .intro-grid { grid-template-columns: 1fr; gap: 12px; }
+    .intro-num { font-size: 90px; }
+    .option { padding: 14px; font-size: 16px; }
+    .cert-body { padding: 28px 18px 34px; box-shadow: 6px 6px 0 var(--ink); }
+    .certificate { box-shadow: 6px 6px 0 var(--ink); }
+  }
+</style>
+</head>
+<body>
+
+<main>
+
+  <!-- Service alert marquee -->
+  <div class="alert-bar">
+    <div style="overflow: hidden; flex: 1;">
+      <div class="alert-marquee">
+        Service Advisory · Diagnostic test in progress · Honesty required · No skipping · Trains may be delayed · Tourists welcome (skeptically) · Bodega cats union approved · &nbsp;
+      </div>
+    </div>
+  </div>
+
+  <header class="masthead">
+    <div class="kicker">
+      <span class="edition">Vol. 27 · Final Edition</span>
+      <span>Five Boroughs · One Test</span>
+    </div>
+    <h1>How <span class="red-word">New York</span><br>Are You?</h1>
+    <p class="deck">A short diagnostic test, administered with an eye-roll and a half-eaten bagel. Eight questions. No appeals.</p>
+  </header>
+
+  <!-- === INTRO === -->
+  <section class="screen active" id="intro">
+    <div class="intro-grid">
+      <div class="intro-num">8.</div>
+      <div class="intro-body">
+        <p>There are many ways to be a New Yorker. Most of them involve a strong opinion about pizza, a working knowledge of the L train, and the ability to scream at a Citi Bike rider without breaking eye contact with your phone.</p>
+        <p>This test will assess, with surgical precision, how much of one you actually are. The pigeons are watching.</p>
+      </div>
+    </div>
+    <div class="center-btn">
+      <button class="primary" onclick="start()">Start the Test</button>
+    </div>
+  </section>
+
+  <!-- === QUESTION === -->
+  <section class="screen" id="quiz">
+    <div class="progress">
+      <span id="progress-text">Q1 / 8</span>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      <span id="score-text">SCORE: 0</span>
+    </div>
+    <div class="q-header">
+      <div class="q-num-bullet" id="q-num-bullet">1</div>
+      <div>
+        <div class="q-num-label">Question / Scenario</div>
+      </div>
+    </div>
+    <h2 class="question-text" id="q-text">—</h2>
+    <div class="options" id="options"></div>
+  </section>
+
+  <!-- === RESULT === -->
+  <section class="screen" id="result">
+    <div class="certificate">
+      <div class="cert-banner">
+        <span>★ Official Diagnosis ★</span>
+        <span id="cert-id">№ —</span>
+      </div>
+      <div class="cert-body">
+        <div class="cert-eyebrow">After careful and reluctant assessment, the patient has been classified as:</div>
+        <div class="cert-score" id="final-score">0<span class="cert-pct">%</span></div>
+        <h2 class="cert-diagnosis" id="diagnosis">—</h2>
+        <p class="cert-tagline" id="tagline">—</p>
+        <div class="cert-stamp">Certified · Stamped · Bodega Approved</div>
+      </div>
+    </div>
+
+    <div class="actions-row">
+      <button class="primary" onclick="restart()">Take it Again</button>
+      <button class="ghost" onclick="window.print()">Print Certificate</button>
+    </div>
+  </section>
+
+  <footer class="footer">No pigeons were harmed in the making of this test</footer>
+
+</main>
+
+<script>
+  // === THE TEST ===
+  // Each option has a "newyork" score from 0 (Ohio) to 5 (born and raised).
+  const questions = [
+    {
+      q: "The subway stops between stations for 8 minutes with no announcement.",
+      a: [
+        { text: "Continue scrolling. This is Tuesday. This is every Tuesday.", s: 5 },
+        { text: "Make eye contact with the most unhinged person in the car. Communicate telepathically.", s: 4 },
+        { text: "Start filming it for the group chat with running commentary.", s: 3 },
+        { text: "Panic. You start asking strangers what's happening. (You are from Connecticut.)", s: 0 }
+      ]
+    },
+    {
+      q: "Someone on the sidewalk is walking three abreast. Slowly. Filming a TikTok.",
+      a: [
+        { text: "A loud, surgical \"EXCUSE ME.\" The middle one flinches. Justice.", s: 5 },
+        { text: "Swerve into the bike lane. Accept death as a reasonable tradeoff.", s: 5 },
+        { text: "Tut. Audibly. Update your podcast queue. Plot revenge.", s: 4 },
+        { text: "You match their pace and seethe. (You are a tourist.)", s: 0 }
+      ]
+    },
+    {
+      q: "It's 95°F. The platform is 110°F. The train pulls in. It's an old non-AC R46.",
+      a: [
+        { text: "Get on it. You're already 11 minutes late and this is your life now.", s: 5 },
+        { text: '"Naaaah." Step back. Wait for the next one. Pray it has AC. (It won\'t.)', s: 4 },
+        { text: "Cry quietly into your iced coffee. Get on it anyway.", s: 4 },
+        { text: "Take an Uber. (You have money and you have shame.)", s: 1 }
+      ]
+    },
+    {
+      q: "A plain cheese slice. What's the correct price?",
+      a: [
+        { text: "$3.50 max. Anything over $4 is a war crime. The Slice Index does not lie.", s: 5 },
+        { text: "Depends. Joe's? $4. Some new spot in Williamsburg trying to be cute? $9.", s: 4 },
+        { text: "Whatever they're charging. I'm hungry and I'm not in a fighting mood.", s: 2 },
+        { text: '"What\'s a \'slice\'?" (Get out. Get out right now.)', s: 0 }
+      ]
+    },
+    {
+      q: "A silent delivery e-bike is coming up the sidewalk behind you.",
+      a: [
+        { text: "You feel it telepathically. You move without breaking your phone call.", s: 5 },
+        { text: "It clips you. You yell something unrepeatable. He yells back. Life continues.", s: 4 },
+        { text: "You jump. You apologize. (You've been here less than a year.)", s: 2 },
+        { text: "You get hit. You're surprised. (Rest in peace.)", s: 0 }
+      ]
+    },
+    {
+      q: "A tourist stops you on the street and asks for directions.",
+      a: [
+        { text: "You stop. You point. You give them three landmarks and an unsolicited opinion about the neighborhood.", s: 5 },
+        { text: "You confidently give them directions to the wrong place. You don't know why.", s: 4 },
+        { text: '"I don\'t live here." (You are wearing a Yankees cap, standing on your own block.)', s: 4 },
+        { text: "You take out your phone to look it up for them. (You are not from this island.)", s: 1 }
+      ]
+    },
+    {
+      q: "It's 2am. The bodega cat is not in its usual spot on the counter.",
+      a: [
+        { text: "You are unsettled. The vibes are off. You don't buy your seltzer.", s: 5 },
+        { text: "You ask the guy at the register where Mittens is. With genuine concern.", s: 5 },
+        { text: "You didn't notice. (Suspicious. We're watching you.)", s: 1 },
+        { text: '"What\'s a bodega?" (Please return your MetroCard at the door.)', s: 0 }
+      ]
+    },
+    {
+      q: "An ambulance has been stuck behind a double-parked Escalade for 2 minutes, sirens blasting.",
+      a: [
+        { text: "You don't even hear it anymore. It's just the city humming.", s: 5 },
+        { text: "You silently hope the double-parker faces consequences in this life.", s: 4 },
+        { text: "You're filming it for Citizen App with full color commentary.", s: 4 },
+        { text: "You're concerned. You're calling 311. (You moved here in March.)", s: 1 }
+      ]
+    }
+  ];
+
+  // === RESULT CATEGORIES ===
+  const results = [
+    {
+      min: 90, title: "Born & Raised",
+      tagline: "Your blood type is bodega coffee. You have opinions about which subway car to stand in. You once survived an MTA meltdown by sheer force of contempt. You ARE the city. Please don't move to Austin."
+    },
+    {
+      min: 75, title: "Verified New Yorker",
+      tagline: "You've lived through at least one apocalyptic blizzard, one heat dome, one transit strike, and three different mayors you didn't like. You have a slice opinion and you will defend it with violence."
+    },
+    {
+      min: 60, title: "Functioning Local",
+      tagline: "You can navigate the subway in under 30 seconds. You tip 20% minimum. You know which side of the escalator to stand on. You'll be fine. Probably."
+    },
+    {
+      min: 40, title: "Transplant in Good Standing",
+      tagline: "You call it \"the city\" but you also still take pictures of bagels. You've explained \"egg cream\" to your parents at least once. You're getting there. Keep going."
+    },
+    {
+      min: 20, title: "Recent Arrival",
+      tagline: "You stand on the left of escalators. You make eye contact on the train. You once said \"oh my God I LOVE Times Square.\" We see you. We forgive you. (We don't.)"
+    },
+    {
+      min: 0, title: "Visiting from Ohio",
+      tagline: "You are smiling. Why are you smiling. Please stop smiling. Also, that's not how you pronounce Houston Street. Welcome to New York. Try the pizza."
+    }
+  ];
+
+  // === STATE ===
+  let idx = 0;
+  let score = 0;
+  const maxScore = questions.length * 5;
+  const lineClasses = ['line-1', 'line-n', 'line-a', 'line-g'];
+  const lineLetters = ['1', 'N', 'A', 'G'];
+
+  const $ = id => document.getElementById(id);
+  const show = id => {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    $(id).classList.add('active');
+  };
+
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function start() {
+    idx = 0;
+    score = 0;
+    show('quiz');
+    renderQuestion();
+  }
+
+  function renderQuestion() {
+    const q = questions[idx];
+    $('q-num-bullet').textContent = idx + 1;
+    $('q-text').textContent = q.q;
+    $('progress-text').textContent = `Q${idx + 1} / ${questions.length}`;
+    $('score-text').textContent = `SCORE: ${score}`;
+    $('progress-fill').style.transform = `scaleX(${idx / questions.length})`;
+
+    const opts = $('options');
+    opts.innerHTML = '';
+    const shuffled = shuffle(q.a);
+    shuffled.forEach((opt, i) => {
+      const b = document.createElement('button');
+      b.className = 'option';
+      b.innerHTML = `<span class="line-bullet ${lineClasses[i]}">${lineLetters[i]}</span><span>${opt.text}</span>`;
+      b.onclick = () => answer(opt.s);
+      opts.appendChild(b);
+    });
+  }
+
+  function answer(s) {
+    score += s;
+    idx++;
+    if (idx >= questions.length) {
+      finish();
+    } else {
+      renderQuestion();
+    }
+  }
+
+  function finish() {
+    const pct = Math.round((score / maxScore) * 100);
+    const result = results.find(r => pct >= r.min);
+    show('result');
+    $('progress-fill').style.transform = 'scaleX(1)';
+
+    // generate a fake case number for flavor
+    const caseNum = String(Math.floor(10000 + Math.random() * 89999));
+    $('cert-id').textContent = '№ ' + caseNum;
+
+    // animate the score counting up
+    let n = 0;
+    const dur = 1000;
+    const start = performance.now();
+    const finalScoreEl = $('final-score');
+    function tick(now) {
+      const t = Math.min((now - start) / dur, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+      n = Math.round(pct * eased);
+      finalScoreEl.innerHTML = `${n}<span class="cert-pct">%</span>`;
+      if (t < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+
+    $('diagnosis').textContent = result.title;
+    $('tagline').textContent = result.tagline;
+  }
+
+  function restart() {
+    show('intro');
+  }
+</script>
+
+</body>
+</html>
